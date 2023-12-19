@@ -2,11 +2,16 @@ from django.urls import path, include
 from rest_framework import routers
 
 from . import views
+from .views import like_post, black_user
 
-router = routers.DefaultRouter() #DefaultRouter를 설정
-router.register('Post', views.PostViewSet) #itemviewset 과 item이라는 router 등록
-router.register('Comment', views.CommentViewSet) #itemviewset 과 item이라는 router 등록
+router = routers.DefaultRouter()
+router.register('post', views.PostViewSet)
+router.register('comment', views.CommentViewSet)
+router.register('user', views.UserViewSet)
+
 
 urlpatterns = [
-    path('', include(router.urls))
+    path('', include(router.urls)),
+    path('post/like', like_post),
+    path('user/black', black_user)
 ]
