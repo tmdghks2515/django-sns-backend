@@ -1,4 +1,7 @@
 from django.contrib.auth.models import User
+from django.core.serializers import serialize
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
@@ -50,3 +53,23 @@ def black_user(request):
     ).save()
 
     return Response()
+
+
+@api_view(['GET'])
+def post_list(request):
+    all_posts = Post.objects.all()
+
+    user_id = request.data.get('user_id')
+    blacks = BlackUser.objects.filter(Q(black_user__id=user_id) | Q(blacked_user__id=user_id))
+
+    black_user_ids = []
+    for black in blacks:
+        if black.black_user.id == user_id:
+            black_user_ids.append(black.blacked_user.id)
+        if black.blacked_user.id == user_id:
+            black_user_ids.append(black.black_user.id)
+
+    filtered_posts = [post for post in all_posts if post.author.id not in black_user_ids]
+    serialized_posts = serialize('json', filtered_posts)
+    return JsonResponse({'filtered_posts': serialized_posts}, safe=False)
+
