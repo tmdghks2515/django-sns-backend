@@ -27,8 +27,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
 @api_view(['POST'])
 def like_post(request):
+    user_id = request.data.get('userId')
     post = get_object_or_404(Post, id=request.data.get('postId'))
-    user = get_object_or_404(User, id=request.data.get('userId'))
+    user = get_object_or_404(User, id=user_id)
+    blacks = BlackUser.objects.filter(Q(black_user__id=user_id) | Q(blacked_user__id=user_id))
+
+    if any(black.black_user.id == post.author.id or black.blacked_user.id == post.author.id for black in blacks):
+        return JsonResponse({'msg': '블랙리스트 입구컷이요'})
+
     try:
         exist_post_like = PostLike.objects.get(post=post, author=user)
         exist_post_like.delete()
