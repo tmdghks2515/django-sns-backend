@@ -1,3 +1,5 @@
+import http
+
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.db.models import Q
@@ -79,3 +81,21 @@ def post_list(request):
     serialized_posts = serialize('json', filtered_posts)
     return JsonResponse({'filtered_posts': serialized_posts}, safe=False)
 
+@api_view(['POST'])
+def comment(request):
+    Comment(
+        author=get_object_or_404(User, id=request.data.get('user_id')),
+        post=get_object_or_404(Post, id=request.data.get('id')),
+        content=request.data.get('content')
+    ).save()
+
+    return JsonResponse({'status': 200})
+
+@api_view(['GET'])
+def comment_list(request):
+    user_id = request.get.get('user_id')
+    comments = Comment.objects.filter(post__id=request.data.get('post_id'))
+    blacks = BlackUser.objects.filter(Q(black_user__id=user_id) | Q(blacked_user__id=user_id))
+    filtered_comments = filter(lambda c: not any((c.author.id != user_id) and (c.author.id == black.black_user.id or c.author.id == black.blacked_user.id) for black in blacks), comments)
+
+    return JsonResponse({'status': 200, 'data': filtered_comments})
